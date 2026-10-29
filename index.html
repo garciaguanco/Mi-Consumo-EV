@@ -1,5 +1,4 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
@@ -7,8 +6,32 @@
   <meta name="theme-color" content="#0b8f70">
   <title>Mi BYD | Control de cargas</title>
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .auth-wrap { max-width: 520px; margin: 32px auto 50px; padding: 0 22px }
+    .auth-card { background: #fff; border: 1px solid #e1ebe7; border-radius: 18px; padding: 24px }
+    .auth-card h2 { margin-bottom: 8px; font-size: 21px }
+    .auth-card>p { color: #71817c; font-size: 13px; line-height: 1.5 }
+    .auth-form { display: grid; gap: 14px }
+    .auth-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+    .auth-actions button, .auth-google { width: 100% }
+    .auth-google { margin-top: 10px }
+    .auth-message { min-height: 18px; margin: 12px 0 0; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere }
+    .auth-message.error { color: #b42318 }
+    .auth-message.success { color: #08745b }
+    .account-bar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 16px; flex-wrap: wrap }
+    .account-email { color: #50615b; font-size: 13px; overflow-wrap: anywhere }
+    .sync-status { font-size: 12px; color: #71817c; margin: 0 0 14px }
+    [hidden] { display: none !important }
+    @media(max-width:560px) {
+      .auth-wrap { padding: 0 13px; margin-top: 18px }
+      .auth-card { padding: 18px }
+      .auth-actions { grid-template-columns: 1fr }
+      .account-bar { justify-content: space-between }
+    }
+  </style>
 </head>
 <body>
+
   <header class="topbar">
     <div class="brand-mark">⚡</div>
     <div>
@@ -17,7 +40,41 @@
     </div>
   </header>
 
-  <main class="container">
+  <!-- VISTA DE AUTENTICACIÓN -->
+  <main id="authView" class="auth-wrap">
+    <section class="auth-card">
+      <p class="eyebrow">TU CUENTA</p>
+      <h2>Ingresá a Mi BYD</h2>
+      <p>Iniciá sesión para guardar y consultar tus cargas desde distintos dispositivos. Tus registros estarán asociados a tu cuenta.</p>
+      
+      <form id="authForm" class="auth-form">
+        <label>
+          Correo electrónico
+          <input id="authEmail" type="email" autocomplete="email" required placeholder="tu correo">
+        </label>
+        <label>
+          Contraseña
+          <input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo 6 caracteres">
+        </label>
+        <div class="auth-actions">
+          <button id="loginButton" type="submit" class="button-primary">Iniciar sesión</button>
+          <button id="registerButton" type="button" class="button-secondary">Crear cuenta</button>
+        </div>
+      </form>
+      
+      <button id="googleButton" type="button" class="button-secondary auth-google">Continuar con Google</button>
+      <p id="authMessage" class="auth-message" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <!-- VISTA PRINCIPAL DE LA APP -->
+  <main id="appView" class="container" hidden>
+    <div class="account-bar">
+      <span id="accountEmail" class="account-email"></span>
+      <button id="logoutButton" type="button" class="button-secondary">Cerrar sesión</button>
+    </div>
+    <p id="syncStatus" class="sync-status" role="status" aria-live="polite">Conectando con la nube…</p>
+    
     <section class="vehicle-card">
       <div>
         <p class="eyebrow">MI VEHÍCULO</p>
@@ -26,44 +83,43 @@
       </div>
       <div class="battery" aria-hidden="true">▰▰▰▰</div>
     </section>
-
+    
     <section class="section-heading">
       <div>
         <h2>Resumen mensual</h2>
         <p class="muted">Consultá tus gastos y consumos.</p>
       </div>
-      <label class="month-picker">Mes
+      <label class="month-picker">
+        Mes
         <input id="monthFilter" type="month">
       </label>
     </section>
-
+    
     <section class="stats-grid">
       <article class="stat-card main-stat">
         <span class="stat-label">Gasto del mes</span>
         <strong id="monthlyCost">$U 0,00</strong>
         <span class="stat-note" id="monthlyCount">0 cargas registradas</span>
       </article>
-
       <article class="stat-card">
         <span class="stat-label">Energía cargada</span>
         <strong id="monthlyKwh">0,00 kWh</strong>
         <span class="stat-note">Total del mes</span>
       </article>
-
       <article class="stat-card">
         <span class="stat-label">Costo medio por kWh</span>
         <strong id="averageKwh">$U 0,00</strong>
         <span class="stat-note">Según tus registros</span>
       </article>
-
       <article class="stat-card">
         <span class="stat-label">Costo teórico por km</span>
         <strong id="costPerKm">$U 0,43</strong>
         <span class="stat-note">Estimación con 312 km WLTP</span>
       </article>
     </section>
-
+    
     <section class="content-grid">
+      <!-- FORMULARIO DE REGISTRO -->
       <section class="panel">
         <div class="panel-heading">
           <div>
@@ -72,14 +128,12 @@
           </div>
           <span class="bolt">⚡</span>
         </div>
-
+        
         <form id="chargeForm">
           <div class="form-grid">
-            <label>Fecha
-              <input id="date" type="date" required>
-            </label>
-
-            <label>Franja horaria
+            <label>Fecha<input id="date" type="date" required></label>
+            <label>
+              Franja horaria
               <select id="tariff">
                 <option value="Valle">Valle</option>
                 <option value="Llano">Llano</option>
@@ -87,177 +141,55 @@
                 <option value="Pública">Cargador público</option>
               </select>
             </label>
-
-            <label>Porcentaje inicial (%)
-              <input
-                id="startPercent"
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                value="20"
-                required
-              >
-            </label>
-
-            <label>Porcentaje final (%)
-              <input
-                id="endPercent"
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                value="100"
-                required
-              >
-            </label>
-
-            <label>Energía cargada (kWh)
-              <input
-                id="kwh"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Se calcula automáticamente"
-                readonly
-                required
-              >
-            </label>
-
-            <label>Costo total ($U)
-              <input
-                id="cost"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Se calcula automáticamente"
-                readonly
-                required
-              >
-            </label>
-
-            <label class="full-width">Kilometraje del vehículo (opcional)
-              <input
-                id="odometer"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Ej. 12500"
-              >
-            </label>
-
-            <label class="full-width">Notas (opcional)
-              <input
-                id="notes"
-                type="text"
-                maxlength="160"
-                placeholder="Ej. Carga en casa durante la noche"
-              >
-            </label>
+            <label>Porcentaje inicial (%)<input id="startPercent" type="number" min="0" max="100" step="1" value="20" required></label>
+            <label>Porcentaje final (%)<input id="endPercent" type="number" min="0" max="100" step="1" value="100" required></label>
+            <label>Energía cargada (kWh)<input id="kwh" type="number" min="0" step="0.01" placeholder="Se calcula automáticamente" readonly required></label>
+            <label>Costo total ($U)<input id="cost" type="number" min="0" step="0.01" placeholder="Se calcula automáticamente" readonly required></label>
+            <label class="full-width">Kilometraje del vehículo (opcional)<input id="odometer" type="number" min="0" step="1" placeholder="Ej. 12500"></label>
+            <label class="full-width">Notas (opcional)<input id="notes" type="text" maxlength="160" placeholder="Ej. Carga en casa durante la noche"></label>
           </div>
-
-          <p class="calculation" id="pricePreview" aria-live="polite">
-            Ingresá el porcentaje inicial y final para calcular la carga.
-          </p>
-
+          <p class="calculation" id="pricePreview" aria-live="polite">Ingresá el porcentaje inicial y final para calcular la carga.</p>
           <div class="form-actions">
-            <button type="submit" class="button-primary">
-              Guardar carga
-            </button>
-            <button
-              type="reset"
-              class="button-secondary"
-              id="resetButton"
-            >
-              Limpiar
-            </button>
+            <button type="submit" class="button-primary">Guardar carga</button>
+            <button type="reset" class="button-secondary" id="resetButton">Limpiar</button>
           </div>
-
           <p class="form-message" id="formMessage" role="status"></p>
         </form>
       </section>
-
+      
+      <!-- DATOS DE REFERENCIA -->
       <section class="panel">
         <div class="panel-heading">
           <div>
             <h2>Datos de referencia</h2>
-            <p class="muted">
-              Cambiá el precio por kWh para actualizar las estimaciones.
-            </p>
+            <p class="muted">Cambiá el precio por kWh para actualizar las estimaciones.</p>
           </div>
         </div>
-
         <div class="reference-list">
-          <div>
-            <span>Capacidad de batería</span>
-            <strong>45,12 kWh</strong>
-          </div>
-          <div>
-            <span>Autonomía WLTP</span>
-            <strong>312 km</strong>
-          </div>
-          <div>
-            <span>Precio de Valle de referencia</span>
-            <strong>$U 2,98/kWh</strong>
-          </div>
+          <div><span>Capacidad de batería</span><strong>45,12 kWh</strong></div>
+          <div><span>Autonomía WLTP</span><strong>312 km</strong></div>
+          <div><span>Precio de Valle de referencia</span><strong>$U 2,98/kWh</strong></div>
         </div>
-
         <div class="estimate-box">
-          <label for="referencePrice">
-            Precio por kWh ($U, IVA incluido)
-          </label>
-
-          <input
-            id="referencePrice"
-            type="number"
-            min="0"
-            step="0.01"
-            value="2.98"
-            required
-          >
-
-          <div class="estimate-result">
-            <span>Carga completa estimada</span>
-            <strong id="fullChargeEstimate">$U 134,46</strong>
-          </div>
-
-          <div class="estimate-result">
-            <span>Carga completa estimada con IVA (22%)</span>
-            <strong id="fullChargeWithIva">$U 164,04</strong>
-          </div>
-
-          <div class="estimate-result">
-            <span>Costo teórico por km</span>
-            <strong id="estimatedKmCost">$U 0,43</strong>
-          </div>
-
-          <p class="tiny muted">
-            Estimaciones basadas en una batería de 45,12 kWh.
-            El cálculo adicional con IVA aplica un factor de 1,22
-            al precio de referencia. No incluye pérdidas de carga.
-          </p>
+          <label for="referencePrice">Precio por kWh ($U, IVA incluido)</label>
+          <input id="referencePrice" type="number" min="0" step="0.01" value="2.98" required>
+          <div class="estimate-result"><span>Carga completa estimada</span><strong id="fullChargeEstimate">$U 134,46</strong></div>
+          <div class="estimate-result"><span>Carga completa estimada con IVA (22%)</span><strong id="fullChargeWithIva">$U 164,04</strong></div>
+          <div class="estimate-result"><span>Costo teórico por km</span><strong id="estimatedKmCost">$U 0,43</strong></div>
+          <p class="tiny muted">Estimaciones basadas en una batería de 45,12 kWh. El cálculo adicional con IVA aplica un factor de 1,22 al precio de referencia. No incluye pérdidas de carga.</p>
         </div>
       </section>
     </section>
-
+    
+    <!-- HISTORIAL -->
     <section class="panel history-panel">
       <div class="panel-heading history-heading">
         <div>
           <h2>Historial de cargas</h2>
-          <p class="muted">
-            Filtrado por el mes seleccionado arriba.
-          </p>
+          <p class="muted">Filtrado por el mes seleccionado arriba.</p>
         </div>
-
-        <button
-          id="exportButton"
-          class="button-secondary"
-          type="button"
-        >
-          Exportar CSV
-        </button>
+        <button id="exportButton" class="button-secondary" type="button">Exportar CSV</button>
       </div>
-
       <div class="table-wrap">
         <table>
           <thead>
@@ -271,21 +203,14 @@
               <th></th>
             </tr>
           </thead>
-
           <tbody id="historyBody">
             <tr>
-              <td colspan="7" class="empty-state">
-                Todavía no hay cargas registradas para este mes.
-              </td>
+              <td colspan="7" class="empty-state">Todavía no hay cargas registradas para este mes.</td>
             </tr>
           </tbody>
         </table>
       </div>
-
-      <p class="storage-note">
-        🔒 En esta primera versión, los datos se guardan en este navegador
-        y dispositivo. No borres los datos del sitio si querés conservarlos.
-      </p>
+      <p class="storage-note">🔒 Tus registros se guardan en tu cuenta de Firebase y podés consultarlos desde otros dispositivos al iniciar sesión. Las cargas locales existentes se combinarán con las de la nube.</p>
     </section>
   </main>
 
@@ -293,7 +218,6 @@
     <p>Mi BYD · Control personal de gastos de carga</p>
   </footer>
 
-  <script src="app/app.js"></script>
+  <script type="module" src="app/app.js"></script>
 </body>
 </html>
-
