@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b8f70">
+  <title>Mi BYD | Control de cargas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-mark">⚡</div>
+    <div>
+      <h1>Mi BYD</h1>
+      <p>Control de carga eléctrica</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="vehicle-card">
+      <div>
+        <p class="eyebrow">MI VEHÍCULO</p>
+        <h2>BYD Yuan Pro GS</h2>
+        <p class="muted">Batería de 45,12 kWh · Autonomía WLTP de 312 km</p>
+      </div>
+      <div class="battery" aria-hidden="true">▰▰▰▰</div>
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <h2>Resumen mensual</h2>
+        <p class="muted">Consultá tus gastos y consumos.</p>
+      </div>
+      <label class="month-picker">Mes
+        <input id="monthFilter" type="month">
+      </label>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card main-stat">
+        <span class="stat-label">Gasto del mes</span>
+        <strong id="monthlyCost">$U 0,00</strong>
+        <span class="stat-note" id="monthlyCount">0 cargas registradas</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Energía cargada</span>
+        <strong id="monthlyKwh">0,00 kWh</strong>
+        <span class="stat-note">Total del mes</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Costo medio por kWh</span>
+        <strong id="averageKwh">$U 0,00</strong>
+        <span class="stat-note">Según tus registros</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Costo teórico por km</span>
+        <strong id="costPerKm">$U 0,43</strong>
+        <span class="stat-note">Estimación con 312 km WLTP</span>
+      </article>
+    </section>
+
+    <section class="content-grid">
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Registrar una carga</h2>
+            <p class="muted">Ingresá los datos de cada recarga.</p>
+          </div>
+          <span class="bolt">⚡</span>
+        </div>
+
+        <form id="chargeForm">
+          <div class="form-grid">
+            <label>Fecha
+              <input id="date" type="date" required>
+            </label>
+            <label>Franja horaria
+              <select id="tariff">
+                <option value="Valle">Valle</option>
+                <option value="Llano">Llano</option>
+                <option value="Punta">Punta</option>
+                <option value="Pública">Cargador público</option>
+              </select>
+            </label>
+            <label>Porcentaje inicial (%)
+              <input id="startPercent" type="number" min="0" max="100" value="20" required>
+            </label>
+            <label>Porcentaje final (%)
+              <input id="endPercent" type="number" min="0" max="100" value="100" required>
+            </label>
+            <label>Energía cargada (kWh)
+              <input id="kwh" type="number" min="0.01" step="0.01" placeholder="Ej. 36,10" required>
+            </label>
+            <label>Costo total ($U)
+              <input id="cost" type="number" min="0" step="0.01" placeholder="Ej. 107,58" required>
+            </label>
+            <label class="full-width">Kilometraje del vehículo (opcional)
+              <input id="odometer" type="number" min="0" step="1" placeholder="Ej. 12500">
+            </label>
+            <label class="full-width">Notas (opcional)
+              <input id="notes" type="text" maxlength="160" placeholder="Ej. Carga en casa durante la noche">
+            </label>
+          </div>
+          <p class="calculation" id="pricePreview">Precio calculado: $U 0,00 por kWh</p>
+          <div class="form-actions">
+            <button type="submit" class="button-primary">Guardar carga</button>
+            <button type="reset" class="button-secondary" id="resetButton">Limpiar</button>
+          </div>
+          <p class="form-message" id="formMessage" role="status"></p>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Datos de referencia</h2>
+            <p class="muted">Podés cambiar el precio para calcular una carga estimada.</p>
+          </div>
+        </div>
+        <div class="reference-list">
+          <div><span>Capacidad de batería</span><strong>45,12 kWh</strong></div>
+          <div><span>Autonomía WLTP</span><strong>312 km</strong></div>
+          <div><span>Precio de Valle de referencia</span><strong>$U 2,98/kWh</strong></div>
+        </div>
+        <div class="estimate-box">
+          <label for="referencePrice">Precio por kWh ($U, IVA incluido)</label>
+          <input id="referencePrice" type="number" min="0" step="0.01" value="2.98">
+          <div class="estimate-result">
+            <span>Carga completa estimada</span>
+            <strong id="fullChargeEstimate">$U 134,46</strong>
+          </div>
+          <div class="estimate-result">
+            <span>Costo teórico por km</span>
+            <strong id="estimatedKmCost">$U 0,43</strong>
+          </div>
+          <p class="tiny muted">Estimación simple: no incluye posibles pérdidas de carga ni variaciones de tarifa.</p>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel history-panel">
+      <div class="panel-heading history-heading">
+        <div>
+          <h2>Historial de cargas</h2>
+          <p class="muted">Filtrado por el mes seleccionado arriba.</p>
+        </div>
+        <button id="exportButton" class="button-secondary" type="button">Exportar CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Franja</th><th>kWh</th><th>Costo</th><th>$U/kWh</th><th>Odómetro</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="7" class="empty-state">Todavía no hay cargas registradas para este mes.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="storage-note">🔒 En esta primera versión, los datos se guardan en este navegador y dispositivo. No borres los datos del sitio si querés conservarlos.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Mi BYD · Control personal de gastos de carga</p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>
