@@ -2,6 +2,7 @@
 const STORAGE_KEY = "miBydCargas_v1";
 const BATTERY_KWH = 45.12;
 const WLTP_KM = 312;
+const IVA_FACTOR = 1.22;
 
 const $ = (id) => document.getElementById(id);
 
@@ -161,18 +162,22 @@ function updateEstimate() {
     Number($("referencePrice").value) || 0
   );
 
-  $("fullChargeEstimate").textContent = money(
-    BATTERY_KWH * price
+  const fullCharge = BATTERY_KWH * price;
+
+  $("fullChargeEstimate").textContent = money(fullCharge);
+
+  // Segundo renglón: importe de referencia multiplicado por 1,22.
+  $("fullChargeWithIva").textContent = money(
+    fullCharge * IVA_FACTOR
   );
 
   $("estimatedKmCost").textContent = money(
-    BATTERY_KWH * price / WLTP_KM
+    fullCharge / WLTP_KM
   );
 
   const startRaw = $("startPercent").value;
   const endRaw = $("endPercent").value;
 
-  // Si falta alguno de los porcentajes, no calcular todavía.
   if (startRaw === "" || endRaw === "") {
     $("kwh").value = "";
     $("cost").value = "";
@@ -184,7 +189,6 @@ function updateEstimate() {
   const start = Number(startRaw);
   const end = Number(endRaw);
 
-  // Validar los porcentajes ingresados.
   if (
     !Number.isFinite(start) ||
     !Number.isFinite(end) ||
@@ -201,11 +205,8 @@ function updateEstimate() {
     return;
   }
 
-  // Energía estimada según el porcentaje recuperado.
   const difference = end - start;
   const energy = BATTERY_KWH * difference / 100;
-
-  // Costo estimado con el precio de referencia por kWh.
   const totalCost = energy * price;
 
   $("kwh").value = energy.toFixed(2);
@@ -293,7 +294,6 @@ function exportCSV() {
 $("chargeForm").addEventListener("submit", (event) => {
   event.preventDefault();
 
-  // Recalcular antes de guardar.
   updateEstimate();
 
   const date = $("date").value;
@@ -392,18 +392,14 @@ $("chargeForm").addEventListener("submit", (event) => {
   render();
 });
 
-// Actualizar los cálculos cuando cambien los porcentajes o la tarifa.
+// Actualizar los cálculos al cambiar los porcentajes o el precio.
 ["startPercent", "endPercent", "referencePrice"].forEach(id => {
   $(id).addEventListener("input", updateEstimate);
 });
 
-// Actualizar el resumen mensual al cambiar el mes.
 $("monthFilter").addEventListener("change", render);
-
-// Exportar historial a CSV.
 $("exportButton").addEventListener("click", exportCSV);
 
-// Restablecer el formulario.
 $("resetButton").addEventListener("click", () => {
   setTimeout(() => {
     $("date").value = todayLocal();
@@ -424,3 +420,4 @@ $("endPercent").value = "100";
 
 updateEstimate();
 render();
+
