@@ -92,6 +92,36 @@
                     justify-content: space-between;
                 }
             }
+            .expenses-panel {
+                margin: 24px 0;
+            }
+            .expense-summary {
+                margin-top: 24px;
+                padding-top: 18px;
+                border-top: 1px solid #e5ece9;
+            }
+            .expense-summary h3 {
+                margin: 0 0 12px;
+                font-size: 17px;
+            }
+            .expense-total {
+                margin-top: 12px;
+                padding: 14px;
+                background: #eff8f4;
+                border-radius: 12px;
+            }
+            .expense-total strong {
+                font-size: 22px;
+            }
+            .expense-history-delete {
+                padding: 6px 9px;
+                font-size: 12px;
+            }
+            @media (max-width: 600px) {
+                .expenses-panel .form-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
         </style>
     </head>
     <body>
@@ -268,6 +298,99 @@
                     ><span class="stat-note">Estimación según tu autonomía</span>
                 </article>
             </section>
+            <section class="panel expenses-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Gastos del vehículo</h2>
+                        <p class="muted">Control mensual de todos los costos de tu vehículo.</p>
+                    </div>
+                    <span class="bolt">$U</span>
+                </div>
+                <form id="expenseForm">
+                    <div class="form-grid">
+                        <label>Mes a registrar<input id="expenseMonth" type="month" required /></label>
+                        <label
+                            >Patente ($U)<input id="expensePatent" type="number" min="0" step="0.01" placeholder="0,00"
+                        /></label>
+                        <label
+                            >Seguro ($U)<input
+                                id="expenseInsurance"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="0,00"
+                        /></label>
+                        <label
+                            >Service y mantenimiento ($U)<input
+                                id="expenseService"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="0,00"
+                        /></label>
+                        <label
+                            >Cuota del vehículo ($U)<input
+                                id="expenseInstallment"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="0,00"
+                        /></label>
+                    </div>
+                    <p class="tiny muted">
+                        El costo de las cargas se calcula automáticamente con los registros de la pestaña de cargas para
+                        el mes seleccionado. Si ya existe un registro de ese mes, podrás actualizarlo.
+                    </p>
+                    <div class="form-actions">
+                        <button type="submit" class="button-primary">Guardar gastos del mes</button>
+                    </div>
+                    <p id="expenseMessage" class="form-message" role="status" aria-live="polite"></p>
+                </form>
+                <div class="expense-summary">
+                    <h3>Detalle del mes seleccionado</h3>
+                    <div class="reference-list">
+                        <div><span>Patente</span><strong id="expenseViewPatent">$U 0,00</strong></div>
+                        <div><span>Seguro</span><strong id="expenseViewInsurance">$U 0,00</strong></div>
+                        <div>
+                            <span>Cargas eléctricas (automático)</span><strong id="expenseViewCharging">$U 0,00</strong>
+                        </div>
+                        <div><span>Service y mantenimiento</span><strong id="expenseViewService">$U 0,00</strong></div>
+                        <div><span>Cuota del vehículo</span><strong id="expenseViewInstallment">$U 0,00</strong></div>
+                    </div>
+                    <div class="estimate-result expense-total">
+                        <span>Gasto total del mes</span><strong id="expenseGrandTotal">$U 0,00</strong>
+                    </div>
+                </div>
+            </section>
+            <section class="panel history-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Historial de gastos mensuales</h2>
+                        <p class="muted">Todos los meses guardados en tu cuenta.</p>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mes</th>
+                                <th>Patente</th>
+                                <th>Seguro</th>
+                                <th>Cargas</th>
+                                <th>Service</th>
+                                <th>Cuota</th>
+                                <th>Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenseHistoryBody">
+                            <tr>
+                                <td colspan="8" class="empty-state">Todavía no hay gastos mensuales registrados.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
             <section class="content-grid">
                 <section class="panel">
                     <div class="panel-heading">
@@ -426,4 +549,5 @@
         <script type="module" src="app/app.js"></script>
     </body>
 </html>
+
 

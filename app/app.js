@@ -94,6 +94,7 @@ const VEHICLE_CATALOG = {
 const $ = (id) => document.getElementById(id);
 
 let charges = [];
+let monthlyExpenses = [];
 let vehicle = { ...DEFAULT_VEHICLE };
 let currentUser = null;
 let cloudReady = false;
@@ -166,6 +167,145 @@ function selectedCharges() {
                 String(b.date || "").localeCompare(String(a.date || "")) ||
                 Number(b.createdAt || 0) - Number(a.createdAt || 0)
         );
+}
+
+function expensesRef() {
+    if (!currentUser) throw new Error("Iniciá sesión para acceder a tus gastos.");
+    return collection(db, "users", currentUser.uid, "monthlyExpenses");
+}
+function expenseMonthRef(month) {
+    if (!currentUser) throw new Error("Iniciá sesión para guardar tus gastos.");
+    return doc(db, "users", currentUser.uid, "monthlyExpenses", month);
+}
+function chargesCostForMonth(month) {
+    return charges
+        .filter((c) => String(c.date || "").slice(0, 7) === month)
+        .reduce((sum, c) => sum + (Number(c.cost) || 0), 0);
+}
+function getMonthExpense(month) {
+    return (
+        monthlyExpenses.find((item) => item.month === month) || {
+            month,
+            patent: 0,
+            insurance: 0,
+            service: 0,
+            installment: 0,
+        }
+    );
+}
+function renderExpenses() {
+    const month = $("monthFilter").value || currentMonth();
+    if ($("expenseMonth").value !== month) $("expenseMonth").value = month;
+    const item = getMonthExpense(month);
+    const charging = chargesCostForMonth(month);
+    const values = {
+        Patent: Number(item.patent) || 0,
+        Insurance: Number(item.insurance) || 0,
+        Charging: charging,
+        Service: Number(item.service) || 0,
+        Installment: Number(item.installment) || 0,
+    };
+    Object.entries(values).forEach(([key, value]) => ($("expenseView" + key).textContent = money(value)));
+    const total = Object.values(values).reduce((sum, value) => sum + value, 0);
+    $("expenseGrandTotal").textContent = money(total);
+    $("expensePatent").value = item.patent ?? 0;
+    $("expenseInsurance").value = item.insurance ?? 0;
+    $("expenseService").value = item.service ?? 0;
+    $("expenseInstallment").value = item.installment ?? 0;
+    renderExpenseHistory();
+}
+function renderExpenseHistory() {
+    const body = $("expenseHistoryBody");
+    const months = new Set(monthlyExpenses.map((x) => x.month));
+    charges.forEach((c) => {
+        if (c.date) months.add(String(c.date).slice(0, 7));
+    });
+    const ordered = [...months].filter(Boolean).sort((a, b) => b.localeCompare(a));
+    body.innerHTML = "";
+    if (!ordered.length) {
+        body.innerHTML =
+            '<tr><td colspan="8" class="empty-state">Todavía no hay gastos mensuales registrados.</td></tr>';
+        return;
+    }
+    ordered.forEach((month) => {
+        const item = getMonthExpense(month);
+        const charging = chargesCostForMonth(month);
+        const total = [item.patent, item.insurance, charging, item.service, item.installment].reduce(
+            (sum, v) => sum + (Number(v) || 0),
+            0
+        );
+        const row = document.createElement("tr");
+        const label = new Intl.DateTimeFormat("es-UY", { month: "long", year: "numeric" }).format(
+            new Date(month + "-15T12:00:00")
+        );
+        [
+            label,
+            money(item.patent),
+            money(item.insurance),
+            money(charging),
+            money(item.service),
+            money(item.installment),
+            money(total),
+        ].forEach((value) => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+        });
+        const action = document.createElement("td");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "button-secondary expense-history-delete";
+        button.textContent = "Ver / editar";
+        button.addEventListener("click", () => {
+            $("monthFilter").value = month;
+            render();
+            $("expenseMonth").value = month;
+            window.scrollTo({
+                top: $("expenseForm").getBoundingClientRect().top + window.scrollY - 80,
+                behavior: "smooth",
+            });
+        });
+        action.appendChild(button);
+        row.appendChild(action);
+        body.appendChild(row);
+    });
+}
+async function loadMonthlyExpenses() {
+    const snapshot = await getDocs(expensesRef());
+    monthlyExpenses = snapshot.docs.map((d) => ({ ...d.data(), month: d.id }));
+    renderExpenses();
+}
+async function saveMonthlyExpense(event) {
+    event.preventDefault();
+    if (!currentUser || !cloudReady) return setExpenseMessage("Esperá a que termine la sincronización.", "error");
+    const month = $("expenseMonth").value;
+    if (!/^\d{4}-\d{2}$/.test(month)) return setExpenseMessage("Elegí un mes válido.", "error");
+    const fields = ["expensePatent", "expenseInsurance", "expenseService", "expenseInstallment"];
+    const values = fields.map((id) => ($(id).value.trim() === "" ? 0 : Number($(id).value)));
+    if (values.some((v) => !Number.isFinite(v) || v < 0))
+        return setExpenseMessage("Ingresá importes válidos, iguales o mayores a cero.", "error");
+    const record = {
+        month,
+        patent: values[0],
+        insurance: values[1],
+        service: values[2],
+        installment: values[3],
+        updatedAt: Date.now(),
+    };
+    try {
+        await setDoc(expenseMonthRef(month), record, { merge: true });
+        monthlyExpenses = [...monthlyExpenses.filter((x) => x.month !== month), record];
+        $("monthFilter").value = month;
+        render();
+        setExpenseMessage("Gastos del mes guardados correctamente en tu cuenta.", "success");
+    } catch (error) {
+        console.error(error);
+        setExpenseMessage(`No se pudieron guardar los gastos: ${friendlyError(error)}`, "error");
+    }
+}
+function setExpenseMessage(message, type = "") {
+    $("expenseMessage").textContent = message;
+    $("expenseMessage").className = `form-message ${type}`;
 }
 
 function profileRef() {
@@ -307,6 +447,7 @@ function render() {
         (Number(vehicle.batteryKwh || 0) * price) / Math.max(1, Number(vehicle.rangeKm || 1))
     );
     renderHistory(list);
+    renderExpenses();
     updateEstimate();
 }
 
@@ -454,6 +595,7 @@ async function loadCloudAndMergeLocal() {
     const finalSnapshot = toUpload.length ? await getDocs(chargesRef()) : cloudSnapshot;
     charges = finalSnapshot.docs.map((d) => ({ ...d.data(), id: d.id }));
     saveLocalCharges();
+    await loadMonthlyExpenses();
     cloudReady = true;
     render();
     setSyncStatus("Sincronizado con Firebase. Tus registros están guardados en la nube.");
@@ -628,6 +770,11 @@ $("vehiclePriceInput").addEventListener("input", () => {
 });
 ["startPercent", "endPercent", "referencePrice"].forEach((id) => $(id).addEventListener("input", updateEstimate));
 $("monthFilter").addEventListener("change", render);
+$("expenseForm").addEventListener("submit", saveMonthlyExpense);
+$("expenseMonth").addEventListener("change", () => {
+    $("monthFilter").value = $("expenseMonth").value;
+    render();
+});
 $("exportButton").addEventListener("click", exportCSV);
 $("resetButton").addEventListener("click", () =>
     setTimeout(() => {
@@ -650,6 +797,7 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     cloudReady = false;
     charges = [];
+    monthlyExpenses = [];
     showApp(user);
     if (!user) {
         setAuthMessage("");
@@ -664,5 +812,6 @@ onAuthStateChanged(auth, async (user) => {
         showMessage("No se pudieron cargar las cargas. Verificá la configuración de Firebase.", "error");
     }
 });
+
 
 
