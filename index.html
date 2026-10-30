@@ -122,6 +122,57 @@
                     grid-template-columns: 1fr;
                 }
             }
+
+            .main-nav {
+                display: flex;
+                gap: 8px;
+                margin: 8px 0 22px;
+                padding: 6px;
+                background: #edf4f1;
+                border-radius: 14px;
+                position: sticky;
+                top: 8px;
+                z-index: 20;
+            }
+            .nav-tab {
+                flex: 1;
+                border: 0;
+                border-radius: 10px;
+                padding: 13px 16px;
+                background: transparent;
+                color: #53645e;
+                font-weight: 700;
+                font-size: 15px;
+                cursor: pointer;
+            }
+            .nav-tab.active {
+                background: #0b8f70;
+                color: #fff;
+                box-shadow: 0 3px 10px #0b8f7030;
+            }
+            .tab-view {
+                animation: tabFade 0.18s ease;
+            }
+            @keyframes tabFade {
+                from {
+                    opacity: 0.65;
+                    transform: translateY(3px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            @media (max-width: 560px) {
+                .main-nav {
+                    top: 4px;
+                    margin: 6px 0 16px;
+                }
+                .nav-tab {
+                    padding: 12px 8px;
+                    font-size: 14px;
+                }
+            }
         </style>
     </head>
     <body>
@@ -177,377 +228,400 @@
                 ><button id="logoutButton" type="button" class="button-secondary">Cerrar sesión</button>
             </div>
             <p id="syncStatus" class="sync-status" role="status" aria-live="polite">Conectando con la nube…</p>
-            <section class="vehicle-card">
-                <div>
-                    <p class="eyebrow">MI VEHÍCULO</p>
-                    <h2 id="vehicleTitle">Elegí tu vehículo eléctrico</h2>
-                    <p class="muted" id="vehicleSubtitle">Configurá la marca, el modelo, la batería y la autonomía.</p>
-                </div>
-                <div class="battery" aria-hidden="true">▰▰▰▰</div>
-            </section>
-            <section class="panel vehicle-settings">
-                <div class="panel-heading">
+            <nav class="main-nav" aria-label="Navegación principal">
+                <button type="button" class="nav-tab active" data-view="tuEvView" aria-current="page">⚡ Tu EV</button
+                ><button type="button" class="nav-tab" data-view="tuControlView">▤ Tu control</button>
+            </nav>
+            <div id="tuEvView" class="tab-view">
+                <section class="vehicle-card">
                     <div>
-                        <h2>Configurá tu vehículo</h2>
-                        <p class="muted">Los datos se guardan en tu cuenta y se usan para los cálculos.</p>
+                        <p class="eyebrow">MI VEHÍCULO</p>
+                        <h2 id="vehicleTitle">Elegí tu vehículo eléctrico</h2>
+                        <p class="muted" id="vehicleSubtitle">
+                            Configurá la marca, el modelo, la batería y la autonomía.
+                        </p>
                     </div>
-                </div>
-                <form id="vehicleForm">
-                    <div class="form-grid">
-                        <label
-                            >Marca<select id="vehicleBrand" required>
-                                <option value="">Elegí una marca</option>
-                                <option>BYD</option>
-                                <option>Chevrolet</option>
-                                <option>Changan</option>
-                                <option>Dongfeng</option>
-                                <option>Geely</option>
-                                <option>GWM</option>
-                                <option>JAC</option>
-                                <option>JMEV</option>
-                                <option>Leapmotor</option>
-                                <option>MG</option>
-                                <option>Renault</option>
-                                <option>Seres</option>
-                                <option>Skywell</option>
-                                <option>Volvo</option>
-                                <option value="Otra">Otra marca</option>
-                            </select></label
-                        >
-                        <label
-                            >Modelo / versión<select id="vehicleModel" required>
-                                <option value="">Primero elegí una marca</option>
-                            </select></label
-                        >
-                        <label id="customBrandWrap" hidden
-                            >Otra marca<input
-                                id="customBrand"
-                                type="text"
-                                maxlength="60"
-                                placeholder="Marca del vehículo"
-                        /></label>
-                        <label id="customModelWrap" hidden
-                            >Otro modelo / versión<input
-                                id="customModel"
-                                type="text"
-                                maxlength="80"
-                                placeholder="Modelo y versión"
-                        /></label>
-                        <label
-                            >Capacidad de batería (kWh)<input
-                                id="batteryInput"
-                                type="number"
-                                min="1"
-                                max="300"
-                                step="0.01"
-                                required
-                                value="45.12"
-                        /></label>
-                        <label
-                            >Autonomía de referencia (km)<input
-                                id="rangeInput"
-                                type="number"
-                                min="1"
-                                max="2000"
-                                step="1"
-                                required
-                                value="312"
-                        /></label>
-                        <label class="full-width"
-                            >Precio por kWh ($U, IVA incluido)<input
-                                id="vehiclePriceInput"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                required
-                                value="2.98"
-                        /></label>
-                    </div>
-                    <p class="tiny muted">
-                        El catálogo inicial es orientativo. Verificá la batería y la autonomía de la versión exacta de
-                        tu vehículo; podés corregir estos datos cuando lo necesites.
-                    </p>
-                    <div class="form-actions">
-                        <button type="submit" class="button-primary">Guardar vehículo</button>
-                    </div>
-                    <p id="vehicleMessage" class="form-message" role="status" aria-live="polite"></p>
-                </form>
-            </section>
-            <section class="section-heading">
-                <div>
-                    <h2>Resumen mensual</h2>
-                    <p class="muted">Consultá tus gastos y consumos.</p>
-                </div>
-                <label class="month-picker">Mes<input id="monthFilter" type="month" /></label>
-            </section>
-            <section class="stats-grid">
-                <article class="stat-card main-stat">
-                    <span class="stat-label">Gasto del mes</span><strong id="monthlyCost">$U 0,00</strong
-                    ><span class="stat-note" id="monthlyCount">0 cargas registradas</span>
-                </article>
-                <article class="stat-card">
-                    <span class="stat-label">Energía cargada</span><strong id="monthlyKwh">0,00 kWh</strong
-                    ><span class="stat-note">Total del mes</span>
-                </article>
-                <article class="stat-card">
-                    <span class="stat-label">Costo medio por kWh</span><strong id="averageKwh">$U 0,00</strong
-                    ><span class="stat-note">Según tus registros</span>
-                </article>
-                <article class="stat-card">
-                    <span class="stat-label">Costo teórico por km</span><strong id="costPerKm">$U 0,43</strong
-                    ><span class="stat-note">Estimación según tu autonomía</span>
-                </article>
-            </section>
-            <section class="panel expenses-panel">
-                <div class="panel-heading">
-                    <div>
-                        <h2>Gastos del vehículo</h2>
-                        <p class="muted">Control mensual de todos los costos de tu vehículo.</p>
-                    </div>
-                    <span class="bolt">$U</span>
-                </div>
-                <form id="expenseForm">
-                    <div class="form-grid">
-                        <label>Mes a registrar<input id="expenseMonth" type="month" required /></label>
-                        <label
-                            >Patente ($U)<input id="expensePatent" type="number" min="0" step="0.01" placeholder="0,00"
-                        /></label>
-                        <label
-                            >Seguro ($U)<input
-                                id="expenseInsurance"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0,00"
-                        /></label>
-                        <label
-                            >Service y mantenimiento ($U)<input
-                                id="expenseService"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0,00"
-                        /></label>
-                        <label
-                            >Cuota del vehículo ($U)<input
-                                id="expenseInstallment"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0,00"
-                        /></label>
-                    </div>
-                    <p class="tiny muted">
-                        El costo de las cargas se calcula automáticamente con los registros de la pestaña de cargas para
-                        el mes seleccionado. Si ya existe un registro de ese mes, podrás actualizarlo.
-                    </p>
-                    <div class="form-actions">
-                        <button type="submit" class="button-primary">Guardar gastos del mes</button>
-                    </div>
-                    <p id="expenseMessage" class="form-message" role="status" aria-live="polite"></p>
-                </form>
-                <div class="expense-summary">
-                    <h3>Detalle del mes seleccionado</h3>
-                    <div class="reference-list">
-                        <div><span>Patente</span><strong id="expenseViewPatent">$U 0,00</strong></div>
-                        <div><span>Seguro</span><strong id="expenseViewInsurance">$U 0,00</strong></div>
-                        <div>
-                            <span>Cargas eléctricas (automático)</span><strong id="expenseViewCharging">$U 0,00</strong>
-                        </div>
-                        <div><span>Service y mantenimiento</span><strong id="expenseViewService">$U 0,00</strong></div>
-                        <div><span>Cuota del vehículo</span><strong id="expenseViewInstallment">$U 0,00</strong></div>
-                    </div>
-                    <div class="estimate-result expense-total">
-                        <span>Gasto total del mes</span><strong id="expenseGrandTotal">$U 0,00</strong>
-                    </div>
-                </div>
-            </section>
-            <section class="panel history-panel">
-                <div class="panel-heading">
-                    <div>
-                        <h2>Historial de gastos mensuales</h2>
-                        <p class="muted">Todos los meses guardados en tu cuenta.</p>
-                    </div>
-                </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Mes</th>
-                                <th>Patente</th>
-                                <th>Seguro</th>
-                                <th>Cargas</th>
-                                <th>Service</th>
-                                <th>Cuota</th>
-                                <th>Total</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="expenseHistoryBody">
-                            <tr>
-                                <td colspan="8" class="empty-state">Todavía no hay gastos mensuales registrados.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-            <section class="content-grid">
-                <section class="panel">
+                    <div class="battery" aria-hidden="true">▰▰▰▰</div>
+                </section>
+                <section class="panel vehicle-settings">
                     <div class="panel-heading">
                         <div>
-                            <h2>Registrar una carga</h2>
-                            <p class="muted">Ingresá los datos de cada recarga.</p>
+                            <h2>Configurá tu vehículo</h2>
+                            <p class="muted">Los datos se guardan en tu cuenta y se usan para los cálculos.</p>
                         </div>
-                        <span class="bolt">⚡</span>
                     </div>
-                    <form id="chargeForm">
+                    <form id="vehicleForm">
                         <div class="form-grid">
-                            <label>Fecha<input id="date" type="date" required /></label>
                             <label
-                                >Franja horaria<select id="tariff">
-                                    <option value="Valle">Valle</option>
-                                    <option value="Llano">Llano</option>
-                                    <option value="Punta">Punta</option>
-                                    <option value="Pública">Cargador público</option>
+                                >Marca<select id="vehicleBrand" required>
+                                    <option value="">Elegí una marca</option>
+                                    <option>BYD</option>
+                                    <option>Chevrolet</option>
+                                    <option>Changan</option>
+                                    <option>Dongfeng</option>
+                                    <option>Geely</option>
+                                    <option>GWM</option>
+                                    <option>JAC</option>
+                                    <option>JMEV</option>
+                                    <option>Leapmotor</option>
+                                    <option>MG</option>
+                                    <option>Renault</option>
+                                    <option>Seres</option>
+                                    <option>Skywell</option>
+                                    <option>Volvo</option>
+                                    <option value="Otra">Otra marca</option>
                                 </select></label
                             >
                             <label
-                                >Porcentaje inicial (%)<input
-                                    id="startPercent"
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    step="1"
-                                    value="20"
-                                    required
-                            /></label>
-                            <label
-                                >Porcentaje final (%)<input
-                                    id="endPercent"
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    step="1"
-                                    value="100"
-                                    required
-                            /></label>
-                            <label
-                                >Energía cargada (kWh)<input
-                                    id="kwh"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Se calcula automáticamente"
-                                    readonly
-                                    required
-                            /></label>
-                            <label
-                                >Costo total ($U)<input
-                                    id="cost"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Se calcula automáticamente"
-                                    readonly
-                                    required
-                            /></label>
-                            <label class="full-width"
-                                >Kilometraje del vehículo (opcional)<input
-                                    id="odometer"
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    placeholder="Ej. 12500"
-                            /></label>
-                            <label class="full-width"
-                                >Notas (opcional)<input
-                                    id="notes"
+                                >Modelo / versión<select id="vehicleModel" required>
+                                    <option value="">Primero elegí una marca</option>
+                                </select></label
+                            >
+                            <label id="customBrandWrap" hidden
+                                >Otra marca<input
+                                    id="customBrand"
                                     type="text"
-                                    maxlength="160"
-                                    placeholder="Ej. Carga en casa durante la noche"
+                                    maxlength="60"
+                                    placeholder="Marca del vehículo"
                             /></label>
-                        </div>
-                        <p class="calculation" id="pricePreview" aria-live="polite">
-                            Ingresá el porcentaje inicial y final para calcular la carga.
-                        </p>
-                        <div class="form-actions">
-                            <button type="submit" class="button-primary">Guardar carga</button
-                            ><button type="reset" class="button-secondary" id="resetButton">Limpiar</button>
-                        </div>
-                        <p class="form-message" id="formMessage" role="status"></p>
-                    </form>
-                </section>
-                <section class="panel">
-                    <div class="panel-heading">
-                        <div>
-                            <h2>Datos de referencia</h2>
-                            <p class="muted">Cambiá el precio por kWh para actualizar las estimaciones.</p>
-                        </div>
-                    </div>
-                    <div class="reference-list">
-                        <div><span>Capacidad de batería</span><strong id="batteryReference">—</strong></div>
-                        <div><span>Autonomía de referencia</span><strong id="rangeReference">—</strong></div>
-                        <div><span>Precio de referencia</span><strong id="priceReference">—</strong></div>
-                    </div>
-                    <div class="estimate-box">
-                        <label for="referencePrice">Precio por kWh ($U, IVA incluido)</label
-                        ><input id="referencePrice" type="number" min="0" step="0.01" value="2.98" required />
-                        <div class="estimate-result">
-                            <span>Carga completa estimada</span><strong id="fullChargeEstimate">$U 134,46</strong>
-                        </div>
-                        <div class="estimate-result">
-                            <span>Carga completa estimada con IVA (22%)</span
-                            ><strong id="fullChargeWithIva">$U 164,04</strong>
-                        </div>
-                        <div class="estimate-result">
-                            <span>Costo teórico por km</span><strong id="estimatedKmCost">$U 0,43</strong>
+                            <label id="customModelWrap" hidden
+                                >Otro modelo / versión<input
+                                    id="customModel"
+                                    type="text"
+                                    maxlength="80"
+                                    placeholder="Modelo y versión"
+                            /></label>
+                            <label
+                                >Capacidad de batería (kWh)<input
+                                    id="batteryInput"
+                                    type="number"
+                                    min="1"
+                                    max="300"
+                                    step="0.01"
+                                    required
+                                    value="45.12"
+                            /></label>
+                            <label
+                                >Autonomía de referencia (km)<input
+                                    id="rangeInput"
+                                    type="number"
+                                    min="1"
+                                    max="2000"
+                                    step="1"
+                                    required
+                                    value="312"
+                            /></label>
+                            <label class="full-width"
+                                >Precio por kWh ($U, IVA incluido)<input
+                                    id="vehiclePriceInput"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    required
+                                    value="2.98"
+                            /></label>
                         </div>
                         <p class="tiny muted">
-                            Estimaciones basadas en los datos del vehículo seleccionado. El cálculo adicional con IVA
-                            aplica un factor de 1,22 al precio de referencia. No incluye pérdidas de carga.
+                            El catálogo inicial es orientativo. Verificá la batería y la autonomía de la versión exacta
+                            de tu vehículo; podés corregir estos datos cuando lo necesites.
                         </p>
+                        <div class="form-actions">
+                            <button type="submit" class="button-primary">Guardar vehículo</button>
+                        </div>
+                        <p id="vehicleMessage" class="form-message" role="status" aria-live="polite"></p>
+                    </form>
+                </section>
+                <section class="section-heading">
+                    <div>
+                        <h2>Resumen mensual</h2>
+                        <p class="muted">Consultá tus gastos y consumos.</p>
+                    </div>
+                    <label class="month-picker">Mes<input id="monthFilter" type="month" /></label>
+                </section>
+                <section class="stats-grid">
+                    <article class="stat-card main-stat">
+                        <span class="stat-label">Gasto del mes</span><strong id="monthlyCost">$U 0,00</strong
+                        ><span class="stat-note" id="monthlyCount">0 cargas registradas</span>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-label">Energía cargada</span><strong id="monthlyKwh">0,00 kWh</strong
+                        ><span class="stat-note">Total del mes</span>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-label">Costo medio por kWh</span><strong id="averageKwh">$U 0,00</strong
+                        ><span class="stat-note">Según tus registros</span>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-label">Costo teórico por km</span><strong id="costPerKm">$U 0,43</strong
+                        ><span class="stat-note">Estimación según tu autonomía</span>
+                    </article>
+                </section>
+                <section class="content-grid">
+                    <section class="panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>Registrar una carga</h2>
+                                <p class="muted">Ingresá los datos de cada recarga.</p>
+                            </div>
+                            <span class="bolt">⚡</span>
+                        </div>
+                        <form id="chargeForm">
+                            <div class="form-grid">
+                                <label>Fecha<input id="date" type="date" required /></label>
+                                <label
+                                    >Franja horaria<select id="tariff">
+                                        <option value="Valle">Valle</option>
+                                        <option value="Llano">Llano</option>
+                                        <option value="Punta">Punta</option>
+                                        <option value="Pública">Cargador público</option>
+                                    </select></label
+                                >
+                                <label
+                                    >Porcentaje inicial (%)<input
+                                        id="startPercent"
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="1"
+                                        value="20"
+                                        required
+                                /></label>
+                                <label
+                                    >Porcentaje final (%)<input
+                                        id="endPercent"
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="1"
+                                        value="100"
+                                        required
+                                /></label>
+                                <label
+                                    >Energía cargada (kWh)<input
+                                        id="kwh"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="Se calcula automáticamente"
+                                        readonly
+                                        required
+                                /></label>
+                                <label
+                                    >Costo total ($U)<input
+                                        id="cost"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="Se calcula automáticamente"
+                                        readonly
+                                        required
+                                /></label>
+                                <label class="full-width"
+                                    >Kilometraje del vehículo (opcional)<input
+                                        id="odometer"
+                                        type="number"
+                                        min="0"
+                                        step="1"
+                                        placeholder="Ej. 12500"
+                                /></label>
+                                <label class="full-width"
+                                    >Notas (opcional)<input
+                                        id="notes"
+                                        type="text"
+                                        maxlength="160"
+                                        placeholder="Ej. Carga en casa durante la noche"
+                                /></label>
+                            </div>
+                            <p class="calculation" id="pricePreview" aria-live="polite">
+                                Ingresá el porcentaje inicial y final para calcular la carga.
+                            </p>
+                            <div class="form-actions">
+                                <button type="submit" class="button-primary">Guardar carga</button
+                                ><button type="reset" class="button-secondary" id="resetButton">Limpiar</button>
+                            </div>
+                            <p class="form-message" id="formMessage" role="status"></p>
+                        </form>
+                    </section>
+                    <section class="panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>Datos de referencia</h2>
+                                <p class="muted">Cambiá el precio por kWh para actualizar las estimaciones.</p>
+                            </div>
+                        </div>
+                        <div class="reference-list">
+                            <div><span>Capacidad de batería</span><strong id="batteryReference">—</strong></div>
+                            <div><span>Autonomía de referencia</span><strong id="rangeReference">—</strong></div>
+                            <div><span>Precio de referencia</span><strong id="priceReference">—</strong></div>
+                        </div>
+                        <div class="estimate-box">
+                            <label for="referencePrice">Precio por kWh ($U, IVA incluido)</label
+                            ><input id="referencePrice" type="number" min="0" step="0.01" value="2.98" required />
+                            <div class="estimate-result">
+                                <span>Carga completa estimada</span><strong id="fullChargeEstimate">$U 134,46</strong>
+                            </div>
+                            <div class="estimate-result">
+                                <span>Carga completa estimada con IVA (22%)</span
+                                ><strong id="fullChargeWithIva">$U 164,04</strong>
+                            </div>
+                            <div class="estimate-result">
+                                <span>Costo teórico por km</span><strong id="estimatedKmCost">$U 0,43</strong>
+                            </div>
+                            <p class="tiny muted">
+                                Estimaciones basadas en los datos del vehículo seleccionado. El cálculo adicional con
+                                IVA aplica un factor de 1,22 al precio de referencia. No incluye pérdidas de carga.
+                            </p>
+                        </div>
+                    </section>
+                </section>
+                <section class="panel history-panel">
+                    <div class="panel-heading history-heading">
+                        <div>
+                            <h2>Historial de cargas</h2>
+                            <p class="muted">Filtrado por el mes seleccionado arriba.</p>
+                        </div>
+                        <button id="exportButton" class="button-secondary" type="button">Exportar CSV</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Franja</th>
+                                    <th>kWh</th>
+                                    <th>Costo</th>
+                                    <th>$U/kWh</th>
+                                    <th>Odómetro</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody">
+                                <tr>
+                                    <td colspan="7" class="empty-state">
+                                        Todavía no hay cargas registradas para este mes.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="storage-note">
+                        🔒 Tus registros se guardan en tu cuenta de Firebase y podés consultarlos desde otros
+                        dispositivos al iniciar sesión. Las cargas locales existentes se combinarán con las de la nube.
+                    </p>
+                </section>
+            </div>
+            <div id="tuControlView" class="tab-view" hidden>
+                <section class="panel expenses-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Gastos del vehículo</h2>
+                            <p class="muted">Control mensual de todos los costos de tu vehículo.</p>
+                        </div>
+                        <span class="bolt">$U</span>
+                    </div>
+                    <form id="expenseForm">
+                        <div class="form-grid">
+                            <label>Mes a registrar<input id="expenseMonth" type="month" required /></label>
+                            <label
+                                >Patente ($U)<input
+                                    id="expensePatent"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0,00"
+                            /></label>
+                            <label
+                                >Seguro ($U)<input
+                                    id="expenseInsurance"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0,00"
+                            /></label>
+                            <label
+                                >Service y mantenimiento ($U)<input
+                                    id="expenseService"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0,00"
+                            /></label>
+                            <label
+                                >Cuota del vehículo ($U)<input
+                                    id="expenseInstallment"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0,00"
+                            /></label>
+                        </div>
+                        <p class="tiny muted">
+                            El costo de las cargas se calcula automáticamente con los registros de la pestaña de cargas
+                            para el mes seleccionado. Si ya existe un registro de ese mes, podrás actualizarlo.
+                        </p>
+                        <div class="form-actions">
+                            <button type="submit" class="button-primary">Guardar gastos del mes</button>
+                        </div>
+                        <p id="expenseMessage" class="form-message" role="status" aria-live="polite"></p>
+                    </form>
+                    <div class="expense-summary">
+                        <h3>Detalle del mes seleccionado</h3>
+                        <div class="reference-list">
+                            <div><span>Patente</span><strong id="expenseViewPatent">$U 0,00</strong></div>
+                            <div><span>Seguro</span><strong id="expenseViewInsurance">$U 0,00</strong></div>
+                            <div>
+                                <span>Cargas eléctricas (automático)</span
+                                ><strong id="expenseViewCharging">$U 0,00</strong>
+                            </div>
+                            <div>
+                                <span>Service y mantenimiento</span><strong id="expenseViewService">$U 0,00</strong>
+                            </div>
+                            <div>
+                                <span>Cuota del vehículo</span><strong id="expenseViewInstallment">$U 0,00</strong>
+                            </div>
+                        </div>
+                        <div class="estimate-result expense-total">
+                            <span>Gasto total del mes</span><strong id="expenseGrandTotal">$U 0,00</strong>
+                        </div>
                     </div>
                 </section>
-            </section>
-            <section class="panel history-panel">
-                <div class="panel-heading history-heading">
-                    <div>
-                        <h2>Historial de cargas</h2>
-                        <p class="muted">Filtrado por el mes seleccionado arriba.</p>
+                <section class="panel history-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Historial de gastos mensuales</h2>
+                            <p class="muted">Todos los meses guardados en tu cuenta.</p>
+                        </div>
                     </div>
-                    <button id="exportButton" class="button-secondary" type="button">Exportar CSV</button>
-                </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Franja</th>
-                                <th>kWh</th>
-                                <th>Costo</th>
-                                <th>$U/kWh</th>
-                                <th>Odómetro</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyBody">
-                            <tr>
-                                <td colspan="7" class="empty-state">
-                                    Todavía no hay cargas registradas para este mes.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <p class="storage-note">
-                    🔒 Tus registros se guardan en tu cuenta de Firebase y podés consultarlos desde otros dispositivos
-                    al iniciar sesión. Las cargas locales existentes se combinarán con las de la nube.
-                </p>
-            </section>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mes</th>
+                                    <th>Patente</th>
+                                    <th>Seguro</th>
+                                    <th>Cargas</th>
+                                    <th>Service</th>
+                                    <th>Cuota</th>
+                                    <th>Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenseHistoryBody">
+                                <tr>
+                                    <td colspan="8" class="empty-state">
+                                        Todavía no hay gastos mensuales registrados.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
         </main>
         <footer><p>Mi EV · Control personal de gastos de carga</p></footer>
         <script type="module" src="app/app.js"></script>
     </body>
 </html>
+
 
 

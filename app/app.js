@@ -739,6 +739,23 @@ async function submitCharge(event) {
     }
 }
 
+// Navegación principal: Tu EV y Tu control.
+document.querySelectorAll(".nav-tab").forEach((button) => {
+    button.addEventListener("click", () => {
+        const target = button.dataset.view;
+        document.querySelectorAll(".nav-tab").forEach((tab) => {
+            const active = tab === button;
+            tab.classList.toggle("active", active);
+            if (active) tab.setAttribute("aria-current", "page");
+            else tab.removeAttribute("aria-current");
+        });
+        document.querySelectorAll(".tab-view").forEach((view) => {
+            view.hidden = view.id !== target;
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+});
+
 $("authForm").addEventListener("submit", loginEmail);
 $("registerButton").addEventListener("click", registerEmail);
 $("googleButton").addEventListener("click", loginGoogle);
@@ -812,6 +829,7 @@ onAuthStateChanged(auth, async (user) => {
         showMessage("No se pudieron cargar las cargas. Verificá la configuración de Firebase.", "error");
     }
 });
+
 
 
 
